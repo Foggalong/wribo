@@ -6,7 +6,7 @@
 wordgoal=500
 
 # Storage location
-savefold="/home/josh/ownCloud/Documents/Writing/Daily/"
+savefold="/home/josh/Nextcloud/Documents/Writing/Daily/"
 
 # How many prompt skips to allow
 skips=2
@@ -33,7 +33,7 @@ if ! type "vim" >> /dev/null 2>&1; then
 fi
 
 # Verifies if 'aspell' is installed
-if ! type "vim" >> /dev/null 2>&1; then
+if ! type "aspell" >> /dev/null 2>&1; then
     echo -e \
         "$0: This tool requires 'aspell' to be installed\n" \
         "\rsince it uses it to run a spellcheck at the end..\n" \
@@ -42,14 +42,13 @@ if ! type "vim" >> /dev/null 2>&1; then
 fi
 
 # Checks for having internet access
-wget -q --spider https://reddit.com
-if [ $? -eq 0 ]; then
+if wget -q --spider https://reddit.com; then
     : # pass
 else
     echo -e \
         "No internet connection available. This script\n" \
-        "\rrequires internet access to connect to GitHub\n" \
-        "\rto check for updates and download 'to-fix' info."
+        "\rrequires internet access to connect to Reddit\n" \
+        "\rto download the latest prompts."
     exit    
 fi
 
@@ -70,13 +69,13 @@ while [ -s page ]; do
     if [[ "$(head -n 1 page)" == "[WP] "* ]]; then
         
         # Print the prompt
-        prompt=$(echo "$(head -n 1 page)" | sed -e "s/\[WP\]\ //g")
-        echo -e "\n\nPrompt $((3-$skips))"
+        prompt=$(head -n 1 page | sed -e "s/\[WP\]\ //g")
+        echo -e "\n\nPrompt $((3-skips))"
         echo -e "--------"
         echo -e "$prompt\n"
 
         if [[ $skips == 0 ]]; then
-            read -r -p "Ran out of skips, you must use this prompt!" trash
+            read -r -p "Ran out of skips, you must use this prompt!"
             echo -e "Prompt: $prompt\n\n" >> doc
             rm page
         else
@@ -84,7 +83,7 @@ while [ -s page ]; do
                 read -r -p "Do you want to use this prompt? " answer
                 case $answer in
                     [Yy]* ) echo -e "Prompt: $prompt\n\n" >> doc; rm page; break;;
-                    [Nn]* ) skips=$(($skips - 1)); break;;
+                    [Nn]* ) skips=$((skips-1)); break;;
                     * ) echo "Please answer [Y]es or [N]o.";;
                 esac
             done
@@ -108,8 +107,8 @@ while true; do
     sed -i '1,2d' prose
     wordcount=$(wc -w prose | sed -e "s/\ prose//")
     
-    if [ $wordcount -lt $wordgoal ]; then
-        read -r -p "Not enough words! Need $((500-$wordcount)) more." trash
+    if [ "$wordcount" -lt "$wordgoal" ]; then
+        read -r -p "Not enough words! Need $((500-wordcount)) more."
     else
         echo "Writing complete!"
         break
@@ -121,5 +120,5 @@ done
 # CLEAN UP
 
 aspell check doc
-mv -i doc $savefold$(date +"%Y-%m-%d.md")
+mv -i doc "$savefold$(date +"%Y-%m-%d.md")"
 rm page prose .doc.swp doc.bak 2> /dev/null 
