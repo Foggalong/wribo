@@ -100,7 +100,7 @@ done
 
 while true; do
     # Open doc in vim
-    vim /tmp/doc +3 -c ":set wrap"
+    vim /tmp/doc +3 -c ":set wrap linebreak nolist"
     
     # Calculate wordcount
     cp /tmp/doc /tmp/prose
